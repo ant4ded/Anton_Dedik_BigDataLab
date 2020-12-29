@@ -5,6 +5,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StringUtilsTest {
+    @Test
+    public void isPositiveNumber_null_false() {
+        Assert.assertFalse(StringUtils.isPositiveNumber(null));
+    }
+
+    @Test
+    public void isPositiveNumber_emptyString_false() {
+        Assert.assertFalse(StringUtils.isPositiveNumber(""));
+    }
 
     @Test
     public void isPositiveNumber_positiveNumber_true() {
