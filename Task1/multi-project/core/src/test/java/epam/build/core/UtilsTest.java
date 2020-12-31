@@ -5,6 +5,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class UtilsTest {
+    @Test
+    public void isAllPositiveNumbers_oneNull_false() {
+        Assert.assertFalse(Utils.isAllPositiveNumbers(null, "4535", "67"));
+    }
+
+    @Test
+    public void isAllPositiveNumbers_empty_false() {
+        Assert.assertFalse(Utils.isAllPositiveNumbers("", "4535", "67"));
+    }
 
     @Test
     public void isAllPositiveNumbers_positiveNumbers_true() {
