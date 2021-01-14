@@ -86,33 +86,38 @@ check_and_install_tool_for_command () {
 }
 
 #######################################
-# Check first argument
+# Getopts
 #######################################
-case ${1} in
-	"-help" | "-h")
-		printf "\t -help || -h \t\t view help info for script arguments\n"
-		printf "\t -info || -i \t\t view script description\n"
-		printf "\t -q          \t\t hide yum logs\n"
-		exit;;
-	"-info" | "-i")
-		printf "This script will install the following in your system:\n"
-		printf "   tool		verion\n"
-		printf "1. Jdk 		11\n"
-		printf "2. Maven 	3.5.4\n"
-		printf "3. Git 		2.27.0\n"
-		printf "4. PostgreSQL	10.15\n"
-		exit;;
-	"-q" | "")
-		;;
-	*)
-		printf "${COLOR_RED}Unexpected argument!${COLOR_DEFAULT}\n"
-		exit;;
-esac
+while getopts "qvh" opt; do
+	case ${opt} in
+			h)
+				h=${OPTARG}
+				printf "This script will install the following in your system:\n"
+				printf "   tool		verion\n"
+				printf "1. Jdk 		11\n"
+				printf "2. Maven 	3.5.4\n"
+				printf "3. Git 		2.27.0\n"
+				printf "4. PostgreSQL	10.15\n\n"
+				printf "\t -h \t\t view help info for script arguments\n"
+				printf "\t -v \t\t view detail yum logs\n"
+				printf "\t -q \t\t hide yum logs\n"
+				;;
+			q)
+				view_mode="-q"
+				;;
+			v)
+				view_mode="-v"
+				;;
+			\?)
+				exit 1
+				;;
+	esac
+done
 
 printf "${COLOR_YELLOW}Update yum...${COLOR_DEFAULT}\n"
-sudo yum update -y ${1}
+sudo yum update -y ${view_mode}
 printf "${COLOR_GREEN}Yum was updated!${COLOR_DEFAULT}\n"
-check_and_install_tool_for_command java ${1}
-check_and_install_tool_for_command mvn ${1}
-check_and_install_tool_for_command git ${1}
-check_and_install_tool_for_command psql ${1}
+check_and_install_tool_for_command java ${view_mode}
+check_and_install_tool_for_command mvn ${view_mode}
+check_and_install_tool_for_command git ${view_mode}	
+check_and_install_tool_for_command psql ${view_mode}
