@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 
 import java.io.*;
 import java.net.URL;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class DownloadAndSaveCrimesConsoleCommand implements ConsoleCommand {
-    private static final String DEFAULT_FILE_PATH = "classpath:LondonStations.csv";
+    private static final String DEFAULT_FILE_PATH = "LondonStations.csv";
     private static final String ARGUMENT_STREET = "street";
     private static final String ARGUMENT_DATE = "date";
     private static final String ARGUMENT_PATH = "path";
@@ -74,38 +73,43 @@ public class DownloadAndSaveCrimesConsoleCommand implements ConsoleCommand {
     }
 
     @SneakyThrows
-    private void findCoordinates(String street, File file) {
+    private void findCoordinates(String street, String filepath) {
         BufferedReader csvReader;
         String row;
-        try {
-            csvReader = new BufferedReader(new FileReader(file));
-            while ((row = csvReader.readLine()) != null) {
-                String[] data = row.split(",");
-                if (data[0].equalsIgnoreCase(street)) {
-                    longitude = data[1];
-                    latitude = data[2];
+        if (filepath != null && !filepath.equals("")) {
+            try {
+                csvReader = filepath.equals(DEFAULT_FILE_PATH) ?
+                        new BufferedReader(new InputStreamReader(getClass().getClassLoader()
+                                .getResourceAsStream(DEFAULT_FILE_PATH))) :
+                        new BufferedReader(new InputStreamReader(new FileInputStream(new File(filepath))));
+                while ((row = csvReader.readLine()) != null) {
+                    String[] data = row.split(",");
+                    if (data[0].equalsIgnoreCase(street)) {
+                        longitude = data[1];
+                        latitude = data[2];
+                    }
                 }
+                csvReader.close();
+            } catch (FileNotFoundException e) {
+                log.error("Can not find file by filepath argument. Search street in default file.");
+                findCoordinates(street, DEFAULT_FILE_PATH);
             }
-            csvReader.close();
-        } catch (FileNotFoundException e) {
-            log.error("Can not find file by filepath argument. Search street in default file.");
-            findCoordinates(street, ResourceUtils.getFile(DEFAULT_FILE_PATH));
-        }
-        if (longitude == null || latitude == null) {
-            if (file.getAbsolutePath().equals(ResourceUtils.getFile(DEFAULT_FILE_PATH).getAbsolutePath())) {
+            if (filepath.equals(DEFAULT_FILE_PATH)) {
                 throw new CommandRuntimeException("Can not find street in default file.");
             }
+        } else {
             log.error("Can not find street in file by filepath argument. Search street in default file");
-            findCoordinates(street, ResourceUtils.getFile(DEFAULT_FILE_PATH));
+            findCoordinates(street, DEFAULT_FILE_PATH);
         }
     }
 
+    @SneakyThrows
     @Override
     public void execute(Properties properties) {
         date = properties.getProperty(ARGUMENT_DATE);
         String street = properties.getProperty(ARGUMENT_STREET);
         String path = properties.getProperty(ARGUMENT_PATH);
-        findCoordinates(street, new File(path == null ? "" : path));
+        findCoordinates(street, path == null ? "" : path);
         List<Crime> list = getListJSONObject().stream().map(jsonConverter::jsonToCrime).collect(Collectors.toList());
         crimeService.saveAll(list);
     }
