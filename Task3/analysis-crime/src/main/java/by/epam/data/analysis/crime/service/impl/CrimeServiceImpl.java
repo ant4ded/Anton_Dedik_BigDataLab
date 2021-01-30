@@ -3,22 +3,21 @@ package by.epam.data.analysis.crime.service.impl;
 import by.epam.data.analysis.crime.entity.Crime;
 import by.epam.data.analysis.crime.repository.CrimeRepository;
 import by.epam.data.analysis.crime.service.CrimeService;
-import by.epam.data.analysis.crime.service.JsonConverter;
-import lombok.Data;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @Slf4j
@@ -26,10 +25,12 @@ public class CrimeServiceImpl implements CrimeService {
     private static final String ARGUMENT_DATE = "date";
     private static final String ARGUMENT_PATH = "path";
 
-    private static final String URL_API = "https://data.police.uk/api/crimes-street/all-crime?";
-    private static final String URL_PARAMETER_LATITUDE = "lat=";
-    private static final String URL_PARAMETER_LONGITUDE = "&lng=";
-    private static final String URL_PARAMETER_DATE = "&date=";
+    private static final String URL_API =
+            "https://data.police.uk/api/crimes-street/all-crime?lat={lat}&lng={lng}&date={date}";
+    private static final String URL_PARAMETER_LATITUDE = "lat";
+    private static final String URL_PARAMETER_LONGITUDE = "lng";
+    private static final String URL_PARAMETER_DATE = "date";
+    private static final String LOG_PARAMETER = "street";
 
     private static final String CSV_DELIMITER = ",";
     private static final int CSV_DEFAULT_FIELD_QUANTITY = 3;
@@ -40,12 +41,12 @@ public class CrimeServiceImpl implements CrimeService {
     private static final int SLEEP_TIME = 1000;
 
     private final CrimeRepository repository;
-    private final JsonConverter jsonConverter;
+    private final RestTemplate restTemplate;
 
     @Autowired
-    public CrimeServiceImpl(CrimeRepository repository, JsonConverter jsonConverter) {
+    public CrimeServiceImpl(CrimeRepository repository, RestTemplate restTemplate) {
         this.repository = repository;
-        this.jsonConverter = jsonConverter;
+        this.restTemplate = restTemplate;
     }
 
     @Override
@@ -57,102 +58,60 @@ public class CrimeServiceImpl implements CrimeService {
         return isSuccess;
     }
 
-    private String readAll(Reader reader) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        int characterCode;
-        while ((characterCode = reader.read()) != -1) {
-            stringBuilder.append((char) characterCode);
-        }
-        return stringBuilder.toString();
-    }
-
-    private List<JSONObject> getListJSONObject(UrlLocation urlLocation, String date) {
-        URLConnection urlConnection = null;
-        List<JSONObject> list = new LinkedList<>();
+    @SneakyThrows(value = InterruptedException.class)
+    private List<Crime> getListCrime(Map<String, String> map, String date) {
+        map.put(URL_PARAMETER_DATE, date);
+        List<Crime> list = new LinkedList<>();
         try {
-            urlConnection = new URL(URL_API +
-                    URL_PARAMETER_LATITUDE + urlLocation.getLatitude() +
-                    URL_PARAMETER_LONGITUDE + urlLocation.getLongitude() +
-                    URL_PARAMETER_DATE + date)
-                    .openConnection();
-            InputStream is = urlConnection.getInputStream();
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-            JSONArray jsonArray = new JSONArray(readAll(rd));
-            list = StreamSupport.stream(jsonArray.spliterator(), true)
-                    .map(val -> (JSONObject) val)
+            Optional<Crime[]> optionalCrimes = Optional.ofNullable(restTemplate
+                    .getForEntity(URL_API, Crime[].class, map)
+                    .getBody());
+            list = Arrays
+                    .stream(optionalCrimes.orElse(new Crime[0]))
                     .collect(Collectors.toList());
-        } catch (IOException e) {
-            try {
-                if (urlConnection != null) {
-                    int responseCode = ((HttpURLConnection) urlConnection).getResponseCode();
-                    log.error("Server returned HTTP response code: " + responseCode);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            HttpStatus status = e.getStatusCode();
+            log.error("Server returned HTTP response code: " + status);
 
-                    if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                        log.error("Nothing by this arguments: date=\"" + date + "\", " + urlLocation.toString());
-                    } else if (responseCode == HttpURLConnection.HTTP_FORBIDDEN) {
-                        log.error("API call limit reached. Waiting and try again.");
-                        Thread.sleep(SLEEP_TIME);
-                    } else {
-                        log.error("Error reading from url.", e);
-                    }
-                }
-            } catch (IOException ioException) {
-                log.error("Error with get error code.", ioException);
-            } catch (InterruptedException interruptedException) {
-                log.error("Thread interrupted.", interruptedException);
-                Thread.currentThread().interrupt();
+            if (status == HttpStatus.BAD_REQUEST) {
+                log.error("Nothing by this arguments: date=\"" + date + "\", " + map.toString());
+            } else if (status == HttpStatus.FORBIDDEN || status == HttpStatus.INTERNAL_SERVER_ERROR) {
+                log.error("API call limit reached. Waiting and try again.");
+                Thread.sleep(SLEEP_TIME);
+                list = getListCrime(map, date);
+            } else {
+                log.error("Error reading from url with HTTP response code: " + status, e);
             }
-        }
-        if (!list.isEmpty()) {
-            log.info("Received json list for street: \"" + urlLocation.getStreet() + "\" by date: \"" + date + "\"");
         }
         return list;
     }
 
-    private List<UrlLocation> findCoordinates(String filepath) {
-        List<UrlLocation> urlLocations = new LinkedList<>();
+    @SneakyThrows
+    private List<Map<String, String>> parseCsv(String filepath) {
+        List<Map<String, String>> mapList = new LinkedList<>();
         if (filepath != null) {
-            try {
-                String row;
-                BufferedReader csvReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(filepath))));
-                while ((row = csvReader.readLine()) != null) {
-                    UrlLocation urlLocation = new UrlLocation();
-                    String[] splitRow = row.split(CSV_DELIMITER);
-                    if (splitRow.length == CSV_DEFAULT_FIELD_QUANTITY) {
-                        urlLocation.setStreet(splitRow[CSV_DEFAULT_STREET_INDEX]);
-                        urlLocation.setLongitude(splitRow[CSV_DEFAULT_LONGITUDE_INDEX]);
-                        urlLocation.setLatitude(splitRow[CSV_DEFAULT_LATITUDE_INDEX]);
-                        urlLocations.add(urlLocation);
-                    }
+            String row;
+            BufferedReader csvReader =
+                    new BufferedReader(new InputStreamReader(new FileInputStream(new File(filepath))));
+            while ((row = csvReader.readLine()) != null) {
+                String[] splitRow = row.split(CSV_DELIMITER);
+                if (splitRow.length == CSV_DEFAULT_FIELD_QUANTITY) {
+                    HashMap<String, String> map = new HashMap<>();
+                    map.put(LOG_PARAMETER, splitRow[CSV_DEFAULT_STREET_INDEX]);
+                    map.put(URL_PARAMETER_LATITUDE, splitRow[CSV_DEFAULT_LATITUDE_INDEX]);
+                    map.put(URL_PARAMETER_LONGITUDE, splitRow[CSV_DEFAULT_LONGITUDE_INDEX]);
+                    mapList.add(map);
                 }
-                csvReader.close();
-            } catch (FileNotFoundException e) {
-                log.error("Can not find file by path: \"" + filepath + "\" .", e);
-            } catch (IOException e) {
-                log.error("Error closing file reader.", e);
             }
+            csvReader.close();
         }
-        return urlLocations;
+        return mapList;
     }
 
     public void downloadAndSave(Properties properties) {
         String date = properties.getProperty(ARGUMENT_DATE);
         String path = properties.getProperty(ARGUMENT_PATH);
-        List<UrlLocation> urlLocations = findCoordinates(path);
-        for (UrlLocation urlLocation : urlLocations) {
-            List<Crime> list = getListJSONObject(urlLocation, date)
-                    .stream()
-                    .parallel()
-                    .map(jsonConverter::jsonToCrime)
-                    .collect(Collectors.toList());
-            saveAll(list);
-        }
-    }
-
-    @Data
-    private class UrlLocation {
-        private String street;
-        private String latitude;
-        private String longitude;
+        List<Map<String, String>> mapsUrlParameters = parseCsv(path);
+        mapsUrlParameters.forEach(urlParameters -> saveAll(getListCrime(urlParameters, date)));
     }
 }
