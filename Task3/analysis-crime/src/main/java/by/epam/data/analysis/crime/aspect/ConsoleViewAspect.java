@@ -16,32 +16,15 @@ import java.util.Properties;
 @Slf4j
 public class ConsoleViewAspect {
     private static final String ARGUMENT_VERBOSE = "verbose";
-    private static final String DELIMITER = "########################################";
 
     private boolean isVerbose;
 
-    @Pointcut("execution(* by.epam.data.analysis.crime.controller.command.ConsoleCommand.*(..))")
-    private void consoleCommand() {
-    }
-
-    @Pointcut("execution(* by.epam.data.analysis.crime.controller.command.DownloadAndSaveCrimesConsoleCommand.execute(*))")
+    @Pointcut("execution(* by.epam.data.analysis.crime.service.CrimeService.downloadAndSave(*))")
     private void getVerbose() {
     }
 
     @Pointcut("execution(* by.epam.data.analysis.crime.service.JsonConverter.jsonToCrime(*))")
     private void logging() {
-    }
-
-    @Around("consoleCommand()")
-    private Object delimitViewCommand(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info(DELIMITER);
-        log.info(DELIMITER);
-        log.info(DELIMITER);
-        Object returnValue = joinPoint.proceed();
-        log.info(DELIMITER);
-        log.info(DELIMITER);
-        log.info(DELIMITER);
-        return returnValue;
     }
 
     @Around("getVerbose()")
