@@ -81,7 +81,6 @@ public class CrimeServiceImpl implements CrimeService {
             list = StreamSupport.stream(jsonArray.spliterator(), true)
                     .map(val -> (JSONObject) val)
                     .collect(Collectors.toList());
-//            jsonArray.forEach(jsonObject -> list.add((JSONObject) jsonObject));
         } catch (IOException e) {
             try {
                 if (urlConnection != null) {
