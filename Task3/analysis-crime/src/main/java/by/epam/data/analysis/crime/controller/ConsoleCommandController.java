@@ -30,7 +30,7 @@ public class ConsoleCommandController implements CommandLineRunner {
                 .hasArg()
                 .hasArgs()
                 .valueSeparator()
-                .numberOfArgs(2)
+                .numberOfArgs(3)
                 .desc("Use value for given properties.")
                 .build();
         options.addOption(propertyOption);
