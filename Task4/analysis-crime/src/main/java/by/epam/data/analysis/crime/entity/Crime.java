@@ -1,35 +1,39 @@
 package by.epam.data.analysis.crime.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 import javax.persistence.*;
 
-@Entity
-@Table(name = "crime", schema = "prod")
 @Data
-@NoArgsConstructor
+@Entity
+@Table(name = "crime")
 public class Crime {
-    @NonNull
     @Id
     private Long id;
-    @Column(name = "persistent_id")
-    private String persistentId;
-    @NonNull
     @Column(name = "category")
     private String category;
+    @JsonProperty("location_type")
+    @Column(name = "location_type")
+    private String locationType;
     @Column(name = "context")
     private String context;
-    @NonNull
-    @Column(name = "date")
-    private String date;
-    @Column(name = "outcome_status_date")
-    private String outcomeStatusDate;
-    @Column(name = "outcome_status_category")
-    private String outcomeStatusCategory;
+    @JsonProperty("persistent_id")
+    @Column(name = "persistent_id")
+    private String persistentId;
+    @JsonProperty("location_subtype")
+    @Column(name = "location_subtype")
+    private String locationSubtype;
+    @Column(name = "month")
+    private String month;
 
-    @OneToOne(fetch = FetchType.EAGER, targetEntity = CrimeLocation.class, cascade = CascadeType.ALL)
-    @JoinColumn(name = "street_id", referencedColumnName = "street_id")
+    @JsonProperty("outcome_status")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "outcome_status_id")
+    private OutcomeStatus outcomeStatus;
+
+    @JsonProperty("location")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "location_id")
     private CrimeLocation crimeLocation;
 }

@@ -1,8 +1,9 @@
 package by.epam.data.analysis.crime.controller;
 
-import by.epam.data.analysis.crime.controller.command.ConsoleCommandProvider;
-import by.epam.data.analysis.crime.controller.reader.ArgumentsReader;
+import by.epam.data.analysis.crime.service.CrimeService;
+import by.epam.data.analysis.crime.service.StopAndSearchService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -10,18 +11,16 @@ import org.springframework.stereotype.Component;
 
 import java.util.Properties;
 
-
 @Component
+@Slf4j
 public class ConsoleCommandController implements CommandLineRunner {
-    private static final String EXIT_CODE = "3";
-
-    private final ArgumentsReader reader;
-    private final ConsoleCommandProvider provider;
+    private final CrimeService crimeService;
+    private final StopAndSearchService stopAndSearchService;
 
     @Autowired
-    public ConsoleCommandController(ArgumentsReader reader, ConsoleCommandProvider provider) {
-        this.reader = reader;
-        this.provider = provider;
+    public ConsoleCommandController(CrimeService crimeService, StopAndSearchService stopAndSearchService) {
+        this.crimeService = crimeService;
+        this.stopAndSearchService = stopAndSearchService;
     }
 
     @SneakyThrows
@@ -31,25 +30,22 @@ public class ConsoleCommandController implements CommandLineRunner {
         Option propertyOption = Option.builder()
                 .longOpt("D")
                 .argName("property=value")
+                .hasArg()
                 .hasArgs()
                 .valueSeparator()
-                .numberOfArgs(2)
-                .desc("use value for given properties")
+                .numberOfArgs(3)
+                .desc("Use value for given properties.")
                 .build();
-
         options.addOption(propertyOption);
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
+        long start = System.currentTimeMillis();
         if (cmd.hasOption("D")) {
             Properties properties = cmd.getOptionProperties("D");
-            provider.getConsoleCommand("1").execute(properties);
+            stopAndSearchService.downloadAndSave(properties);
+            crimeService.downloadAndSave(properties);
         }
-//        while (true) {
-//            String chosen = reader.read();
-//            if (chosen.equals(EXIT_CODE)) {
-//                break;
-//            }
-//            provider.getConsoleCommand(chosen).execute(properties);
-//        }
+        long end = System.currentTimeMillis();
+        log.info("Executing: " + ((end-start) / 1000) + " seconds.");
     }
 }

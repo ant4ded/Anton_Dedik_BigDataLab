@@ -2,6 +2,8 @@ package by.epam.data.analysis.crime.service;
 
 import by.epam.data.analysis.crime.entity.Crime;
 
-public interface CrimeService {
-    boolean saveAll(Iterable<Crime> i);
+import java.util.Collection;
+
+public interface CrimeService extends RemoteEntityService {
+    boolean saveAll(Collection<Crime> i, String street, boolean verbose);
 }
