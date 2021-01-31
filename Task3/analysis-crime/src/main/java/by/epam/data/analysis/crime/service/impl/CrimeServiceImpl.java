@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class CrimeServiceImpl implements CrimeService {
     private static final String ARGUMENT_DATE = "date";
     private static final String ARGUMENT_PATH = "path";
+    private static final String ARGUMENT_VERBOSE = "verbose";
 
     private static final String URL_API =
             "https://data.police.uk/api/crimes-street/all-crime?lat={lat}&lng={lng}&date={date}";
@@ -49,12 +50,16 @@ public class CrimeServiceImpl implements CrimeService {
         this.restTemplate = restTemplate;
     }
 
-    @Override
-    public boolean saveAll(Collection<Crime> i) {
+    public boolean saveAll(Collection<Crime> i, String street, boolean verbose) {
         boolean isSuccess;
-        log.info("Trying save Crime collection with size: " + i.size());
+        long start = System.currentTimeMillis();
         isSuccess = !repository.saveAll(i).isEmpty();
-        log.info("Crime collection with size: " + i.size() + (isSuccess ? " saved." : " unsaved."));
+        long end = System.currentTimeMillis();
+        if (verbose) {
+            log.info("Crime collection with size: " + i.size() +
+                    " for street: " + street +
+                    (isSuccess ? " saved in " + (end - start) + " milliseconds." : " unsaved."));
+        }
         return isSuccess;
     }
 
@@ -111,7 +116,13 @@ public class CrimeServiceImpl implements CrimeService {
     public void downloadAndSave(Properties properties) {
         String date = properties.getProperty(ARGUMENT_DATE);
         String path = properties.getProperty(ARGUMENT_PATH);
+        boolean verbose = Boolean.parseBoolean(properties.getProperty(ARGUMENT_VERBOSE));
         List<Map<String, String>> mapsUrlParameters = parseCsv(path);
-        mapsUrlParameters.forEach(urlParameters -> saveAll(getListCrime(urlParameters, date)));
+        mapsUrlParameters
+                .stream()
+                .parallel()
+                .forEach(urlParameters -> saveAll(getListCrime(urlParameters, date),
+                        urlParameters.get(LOG_PARAMETER),
+                        verbose));
     }
 }
