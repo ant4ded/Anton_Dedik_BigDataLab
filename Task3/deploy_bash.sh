@@ -33,11 +33,6 @@ while getopts ":hvqcmd:n:s:p:" opt; do
 	case ${opt} in
 			h)
 				printf "This script will deploy analysis crime application on the system:\n"
-				printf "   tool		verion\n"
-				printf "1. Jdk 		11\n"
-				printf "2. Maven 	3.5.4\n"
-				printf "3. Git 		2.27.0\n"
-				printf "4. PostgreSQL	10.15\n\n"
 				printf "\t -h \t\t view help info for script arguments\n"
 				printf "\t -v \t\t view detail logs\n"
 				printf "\t -q \t\t hide detail logs (default mode)\n"
