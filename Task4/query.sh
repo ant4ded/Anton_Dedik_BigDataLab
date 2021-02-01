@@ -76,6 +76,7 @@ case ${query} in
 		printf "$(PGPASSWORD=root psql -d uk_police -U postgres -f 1_most_dangerous_streets.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")"
 		;;
 	2)
+		printf "$(PGPASSWORD=root psql -d uk_police -U postgres -f 2_month_to_month_crime_volume_comparison.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")"
 		;;
 	3)
 		;;
