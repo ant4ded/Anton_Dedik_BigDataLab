@@ -1,10 +1,4 @@
 #!/bin/bash
-# This script will install the following in your system:
-#   tool		verion
-# 1. Jdk 		11
-# 2. Maven 		3.5.4
-# 3. Git 		2.27.0
-# 4. PostgreSQL	10.15
 
 #######################################
 # Global color constants
@@ -17,13 +11,14 @@ COLOR_DEFAULT='\033[0m'
 #######################################
 # Getopts
 #######################################
-while getopts ":hs:e:q:" opt; do
+while getopts ":hs:e:q:c:" opt; do
 	case ${opt} in
 			h)
 				printf "This script will execute queries to uk_police database:\n"
 				printf "\t -h \t\t view help info for script arguments\n"
 				printf "\t -s \t\t month start  (yyyy-mm)\n"
 				printf "\t -e \t\t month end    (yyyy-mm)\n"
+				printf "\t -c \t\t outcome category ('string'). Only for 3 query\n"
 				printf "\t -q \t\t query number (n)\n"
 				printf "\t    \t\t 1 Most dangerous streets.\n"
 				printf "\t    \t\t   Description: Top streets by crime number within specified period.\n"
@@ -59,34 +54,40 @@ while getopts ":hs:e:q:" opt; do
 			e)
 				end_date="${OPTARG}"
 				;;
+			c)
+				category="${OPTARG}"
+				;;
 			q)
 				query="${OPTARG}"
 				;;
 			\? )
-				printf "${COLOR_RED}Invalid option: $OPTARG ${COLOR_DEFAULT}" 1>&2
+				printf "${COLOR_RED}Invalid option: $OPTARG${COLOR_DEFAULT}\n" 1>&2
 				;;
 			: )
-				printf "${COLOR_RED}Invalid option: $OPTARG requires an argument${COLOR_DEFAULT}" 1>&2
+				printf "${COLOR_RED}Invalid option: $OPTARG requires an argument${COLOR_DEFAULT}\n" 1>&2
 				;;
 	esac
 done
 
 case ${query} in
 	1)
-		printf "$(PGPASSWORD=root psql -d uk_police -U postgres -f 1_most_dangerous_streets.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")"
+		$(PGPASSWORD=root psql -d uk_police -U postgres -f 1_most_dangerous_streets.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
 		;;
 	2)
-		printf "$(PGPASSWORD=root psql -d uk_police -U postgres -f 2_month_to_month_crime_volume_comparison.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")"
+		$(PGPASSWORD=root psql -d uk_police -U postgres -f 2_month_to_month_crime_volume_comparison.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
 		;;
 	3)
+		$(PGPASSWORD=root psql -d uk_police -U postgres -f 3_crimes_with_specified_outcome_status.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\" -v category=\"\'${end_date}\'\")
 		;;
 	4)
+		$(PGPASSWORD=root psql -d uk_police -U postgres -f 4_stop_and_search_statistics_by_ethnicity.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
 		;;
 	5)
+		$(PGPASSWORD=root psql -d uk_police -U postgres -f 5_most_probable_stop_and_search_snapshot_on_street_level.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
 		;;
 	6)
 		;;
 	*)
-		printf "${COLOR_RED}Invalid query parameter: ${query}${COLOR_DEFAULT}" 
+		printf "${COLOR_RED}Invalid query parameter: ${query}${COLOR_DEFAULT}\n" 
 		;;
 esac

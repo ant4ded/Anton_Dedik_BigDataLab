@@ -4,27 +4,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.sql.Date;
+import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "crime")
+@Table
 public class Crime {
     @Id
     private Long id;
-    @Column(name = "category")
+    @Column
     private String category;
     @JsonProperty("location_type")
-    @Column(name = "location_type")
+    @Column
     private String locationType;
-    @Column(name = "context")
+    @Column
     private String context;
     @JsonProperty("persistent_id")
-    @Column(name = "persistent_id")
+    @Column
     private String persistentId;
     @JsonProperty("location_subtype")
-    @Column(name = "location_subtype")
+    @Column
     private String locationSubtype;
-    @Column(name = "month")
+    @Column
     private String month;
 
     @JsonProperty("outcome_status")

@@ -6,13 +6,13 @@ import javax.persistence.*;
 
 @Data
 @Entity
-@Table(name = "outcome_status")
+@Table
 public class OutcomeStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-    @Column(name = "category")
+    @Column
     private String category;
-    @Column(name = "date")
+    @Column
     private String date;
 }
