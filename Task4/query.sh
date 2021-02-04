@@ -71,19 +71,19 @@ done
 
 case ${query} in
 	1)
-		$(PGPASSWORD=root psql -d uk_police -U postgres -f 1_most_dangerous_streets.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
+		PGPASSWORD=root psql -d uk_police -U postgres -f 1_most_dangerous_streets.sql -v start=\'${start_date}\' -v end=\'${end_date}\'
 		;;
 	2)
-		$(PGPASSWORD=root psql -d uk_police -U postgres -f 2_month_to_month_crime_volume_comparison.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
+		PGPASSWORD=root psql -d uk_police -U postgres -f 2_month_to_month_crime_volume_comparison.sql -v start=\'${start_date}\' -v end=\'${end_date}\'
 		;;
 	3)
-		$(PGPASSWORD=root psql -d uk_police -U postgres -f 3_crimes_with_specified_outcome_status.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\" -v category=\"\'${end_date}\'\")
+		PGPASSWORD=root psql -d uk_police -U postgres -f 3_crimes_with_specified_outcome_status.sql -v start=\'${start_date}\' -v end=\'${end_date}\' -v category=\'${end_date}\'
 		;;
 	4)
-		$(PGPASSWORD=root psql -d uk_police -U postgres -f 4_stop_and_search_statistics_by_ethnicity.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
+		PGPASSWORD=root psql -d uk_police -U postgres -f 4_stop_and_search_statistics_by_ethnicity.sql -v start=\'${start_date}\' -v end=\'${end_date}\'
 		;;
 	5)
-		$(PGPASSWORD=root psql -d uk_police -U postgres -f 5_most_probable_stop_and_search_snapshot_on_street_level.sql -v start=\"\'${start_date}\'\" -v end=\"\'${end_date}\'\")
+		PGPASSWORD=root psql -d uk_police -U postgres -f 5_most_probable_stop_and_search_snapshot_on_street_level.sql -v start=\'${start_date}\' -v end=\'${end_date}\'
 		;;
 	6)
 		;;

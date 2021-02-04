@@ -13,6 +13,6 @@ INNER JOIN prod.street 			AS s
 	ON s.id = l.street_id
 INNER JOIN prod.outcome_object 	AS oo
 	ON oo.id = sas.outcome_object_id
-WHERE sas.datetime::date BETWEEN TO_DATE(CAST(:start AS varchar), 'yyyy-mm') AND TO_DATE(CAST(:end AS varchar), 'yyyy-mm')
+WHERE sas.datetime::date BETWEEN TO_DATE(:start, 'yyyy-mm') AND TO_DATE(:end, 'yyyy-mm')
 GROUP BY s.id
 ORDER BY s.id

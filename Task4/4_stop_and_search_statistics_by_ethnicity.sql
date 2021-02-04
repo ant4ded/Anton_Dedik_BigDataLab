@@ -8,6 +8,6 @@ SELECT DISTINCT
 FROM prod.stop_and_search AS sas
 INNER JOIN prod.outcome_object AS oo
 	ON oo.id = sas.outcome_object_id
-WHERE sas.datetime::date BETWEEN TO_DATE(CAST(:start AS varchar), 'yyyy-mm') AND TO_DATE(CAST(:end AS varchar), 'yyyy-mm')
+WHERE sas.datetime::date BETWEEN TO_DATE(:start, 'yyyy-mm') AND TO_DATE(:end, 'yyyy-mm')
 GROUP BY officer_defined_ethnicity
 ORDER BY sas.officer_defined_ethnicity
