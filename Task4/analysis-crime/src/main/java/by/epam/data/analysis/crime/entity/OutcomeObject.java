@@ -9,7 +9,7 @@ import javax.persistence.Table;
 
 @Data
 @Entity
-@Table(name = "outcome_object")
+@Table
 public class OutcomeObject {
     @Id
     private String id;
