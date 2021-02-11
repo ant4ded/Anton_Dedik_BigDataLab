@@ -1,0 +1,107 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<maven2-moduleset plugin="maven-plugin@3.8">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>5</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.5.2">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>***</url>
+        <credentialsId>***</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <customWorkspace>c:\Education\bigdata\jenkins\</customWorkspace>
+  <rootModule>
+    <groupId>by.epam.data.analysis.crime</groupId>
+    <artifactId>analysis-crime</artifactId>
+  </rootModule>
+  <rootPOM>./Task4/analysis-crime/pom.xml</rootPOM>
+  <goals>package</goals>
+  <aggregatorStyleBuild>true</aggregatorStyleBuild>
+  <incrementalBuild>false</incrementalBuild>
+  <ignoreUpstremChanges>true</ignoreUpstremChanges>
+  <ignoreUnsuccessfulUpstreams>false</ignoreUnsuccessfulUpstreams>
+  <archivingDisabled>false</archivingDisabled>
+  <siteArchivingDisabled>false</siteArchivingDisabled>
+  <fingerprintingDisabled>false</fingerprintingDisabled>
+  <resolveDependencies>false</resolveDependencies>
+  <processPlugins>false</processPlugins>
+  <mavenValidationLevel>-1</mavenValidationLevel>
+  <runHeadless>false</runHeadless>
+  <disableTriggerDownstreamProjects>false</disableTriggerDownstreamProjects>
+  <blockTriggerWhenBuilding>true</blockTriggerWhenBuilding>
+  <settings class="jenkins.mvn.DefaultSettingsProvider"/>
+  <globalSettings class="jenkins.mvn.DefaultGlobalSettingsProvider"/>
+  <reporters/>
+  <publishers/>
+  <buildWrappers/>
+  <prebuilders>
+    <hudson.tasks.BatchFile>
+      <command>cd Task4/analysis-crime&#xd;
+mvn compile</command>
+      <configuredLocalRules/>
+    </hudson.tasks.BatchFile>
+    <hudson.plugins.sonar.SonarRunnerBuilder plugin="sonar@2.13">
+      <project></project>
+      <properties>sonar.projectKey=analysis-crime
+sonar.projectName=analysis-crime
+sonar.projectVersion=1.0 
+sonar.sources=./Task4/analysis-crime/src/main/java
+sonar.language=java 
+sonar.sourceEncoding=UTF-8 
+sonar.login=***
+sonar.password=***
+sonar.java.binaries=./Task4/analysis-crime/target/classes</properties>
+      <javaOpts></javaOpts>
+      <additionalArguments></additionalArguments>
+      <jdk>jdk1.8.0_261</jdk>
+      <task></task>
+    </hudson.plugins.sonar.SonarRunnerBuilder>
+  </prebuilders>
+  <postbuilders>
+    <hudson.tasks.BatchFile>
+      <command>chcp 65001&#xd;
+&#xd;
+if exist Task4\analysis-crime\target\*.jar (  &#xd;
+   mkdir build_%BUILD_NUMBER%&#xd;
+   xcopy Task4\analysis-crime\target\*.* build_%BUILD_NUMBER% /E/H&#xd;
+) else (&#xd;
+   echo &quot;File doesn&apos;t exist. Build Failed&quot;&#xd;
+)&#xd;
+</command>
+      <configuredLocalRules/>
+    </hudson.tasks.BatchFile>
+  </postbuilders>
+  <runPostStepsIfResult>
+    <name>SUCCESS</name>
+    <ordinal>0</ordinal>
+    <color>BLUE</color>
+    <completeBuild>true</completeBuild>
+  </runPostStepsIfResult>
+</maven2-moduleset>

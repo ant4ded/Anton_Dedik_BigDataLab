@@ -1,6 +1,0 @@
-projectKey=analysis-crime
-serverUrl=http://localhost:9000
-serverVersion=8.6.1.40680
-dashboardUrl=http://localhost:9000/dashboard?id=analysis-crime
-ceTaskId=AXdyo4FZZFUrtLTX8CG2
-ceTaskUrl=http://localhost:9000/api/ce/task?id=AXdyo4FZZFUrtLTX8CG2
