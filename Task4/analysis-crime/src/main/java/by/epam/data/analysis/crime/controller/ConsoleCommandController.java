@@ -1,7 +1,7 @@
 package by.epam.data.analysis.crime.controller;
 
-import by.epam.data.analysis.crime.service.CrimeService;
-import by.epam.data.analysis.crime.service.StopAndSearchService;
+import by.epam.data.analysis.crime.service.impl.CrimeService;
+import by.epam.data.analysis.crime.service.impl.StopAndSearchService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
@@ -14,9 +14,13 @@ import java.util.Properties;
 @Component
 @Slf4j
 public class ConsoleCommandController implements CommandLineRunner {
+    private static final String ARGUMENT_API_STOP_AND_SEARCH = "stop_and_search";
+    private static final String ARGUMENT_API_CRIME = "crime";
+
     private final CrimeService crimeService;
     private final StopAndSearchService stopAndSearchService;
 
+    // TODO: 10.02.2021 tests
     @Autowired
     public ConsoleCommandController(CrimeService crimeService, StopAndSearchService stopAndSearchService) {
         this.crimeService = crimeService;
@@ -42,10 +46,14 @@ public class ConsoleCommandController implements CommandLineRunner {
         long start = System.currentTimeMillis();
         if (cmd.hasOption("D")) {
             Properties properties = cmd.getOptionProperties("D");
-            stopAndSearchService.downloadAndSave(properties);
-            crimeService.downloadAndSave(properties);
+            if (Boolean.parseBoolean(properties.getProperty(ARGUMENT_API_STOP_AND_SEARCH))) {
+                stopAndSearchService.download(properties);
+            }
+            if (Boolean.parseBoolean(properties.getProperty(ARGUMENT_API_CRIME))) {
+                crimeService.download(properties);
+            }
         }
         long end = System.currentTimeMillis();
-        log.info("Executing: " + ((end-start) / 1000) + " seconds.");
+        log.info("Executing: " + ((end - start) / 1000) + " seconds.");
     }
 }
