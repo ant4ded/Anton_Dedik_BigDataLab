@@ -14,22 +14,10 @@ COLOR_GREEN='\033[0;32m'
 COLOR_YELLOW='\033[1;33m'
 COLOR_DEFAULT='\033[0m'
 
-runApp() {
-	for ((i=0; i <=mnumber && month<=12; i++))
-	do
-		if [[ ${view_mode} == "-v" ]]
-		then
-			java -jar target/analysis-crime-1.0.jar -Ddate=${year}-$((month++)) -Dpath=${path} -Dverbose=true
-		else
-			java -jar target/analysis-crime-1.0.jar -Ddate=${year}-$((month++)) -Dpath=${path}
-		fi
-	done
-}
-
 #######################################
 # Getopts
 #######################################
-while getopts ":hvqcmd:n:s:p:" opt; do
+while getopts ":hvqcmots:e:n:s:p:" opt; do
 	case ${opt} in
 			h)
 				printf "This script will deploy analysis crime application on the system:\n"
@@ -43,7 +31,10 @@ while getopts ":hvqcmd:n:s:p:" opt; do
 				printf "\t -q \t\t hide detail logs (default mode)\n"
 				printf "\t -c \t\t enable database table clean\n"
 				printf "\t -m \t\t enable maven build\n"
-				printf "\t -d \t\t month date (yyyy-mm)\n"
+				printf "\t -o \t\t enable crime api\n"
+				printf "\t -t \t\t enable stop and search api\n"
+				printf "\t -s \t\t start month date (yyyy-mm)\n"
+				printf "\t -e \t\t end month date (yyyy-mm)\n"
 				printf "\t -n \t\t month number (n)\n"
 				printf "\t -p \t\t path to csv file with streets and coordinates\n"
 				;;
@@ -59,9 +50,19 @@ while getopts ":hvqcmd:n:s:p:" opt; do
 			m)
 				enableMaven=1
 				;;
-			d)
-				year=$(echo "${OPTARG}" | cut -d "-" -f 1)
-				month=$(echo "${OPTARG}" | cut -d "-" -f 2)
+			o)
+				crime_api="true"
+				;;
+			t)
+				stop_and_search_api="true"
+				;;
+			s)
+				syear=$(echo "${OPTARG}" | cut -d "-" -f 1)
+				smonth=$(echo "${OPTARG}" | cut -d "-" -f 2)
+				;;
+			e)
+				eyear=$(echo "${OPTARG}" | cut -d "-" -f 1)
+				emonth=$(echo "${OPTARG}" | cut -d "-" -f 2)
 				;;
 			n)
 				mnumber=${OPTARG}
@@ -120,4 +121,9 @@ else
     printf "${COLOR_RED}${POM} does not exist.${COLOR_DEFAULT}\n"
 fi
 
-runApp
+if [[ ${view_mode} == "-v" ]]
+then
+	java -jar target/analysis-crime-1.0.jar -Dstart=${syear}-$((smonth++)) -Dend=${eyear}-$((emonth++)) -Dpath=${path} -Dcrime=${crime_api} -Dstop_and_search=${stop_and_search_api} -Dverbose=true
+else
+	java -jar target/analysis-crime-1.0.jar -Dstart=${syear}-$((smonth++)) -Dend=${eyear}-$((emonth++)) -Dpath=${path} -Dcrime=${crime_api} -Dstop_and_search=${stop_and_search_api}
+fi
